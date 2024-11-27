@@ -1,0 +1,50 @@
+// /src/prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Assuming PostgreSQL, adjust if needed
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  name             String 
+  image            String
+  gender           Gender
+  password         String
+  role             Role
+  bookings         Booking[]
+  classSchedules   ClassSchedule[] @relation("TrainerClass")
+}
+
+model ClassSchedule {
+  id               Int            @id @default(autoincrement())
+  startTime        DateTime
+  endTime          DateTime
+  trainer          User           @relation("TrainerClass", fields: [trainerId], references: [id])
+  trainerId        Int
+  bookings         Booking[]
+}
+
+model Booking {
+  id               Int            @id @default(autoincrement())
+  trainee          User           @relation(fields: [traineeId], references: [id])
+  traineeId        Int
+  classSchedule    ClassSchedule   @relation(fields: [classId], references: [id])
+  classId          Int
+}
+
+enum Role {
+  ADMIN
+  TRAINER
+  TRAINEE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}

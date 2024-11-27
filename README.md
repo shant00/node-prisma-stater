@@ -1,2 +1,1 @@
-Stater
 # node-prisma-stater
