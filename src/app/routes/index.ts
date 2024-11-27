@@ -1,5 +1,6 @@
 import express from 'express';
 import { AuthRoutes } from '../modules/auth/auth.route';
+import { UserRoutes } from '../modules/user/user.route';
 
 const router = express.Router();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -10,7 +11,7 @@ const moduleRoutes = [
   },
   {
     path: '/user',
-    route: AuthRoutes,
+    route: UserRoutes,
   }
 ];
 
