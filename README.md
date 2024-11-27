@@ -1,0 +1,2 @@
+Stater
+# node-prisma-stater
