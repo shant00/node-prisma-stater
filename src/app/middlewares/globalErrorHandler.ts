@@ -1,29 +1,28 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
-import ApiError from '../../errors/ApiError';
-import handleValidationError from '../../errors/handleValidationError';
-
-import { Prisma } from '@prisma/client';
+import { DatabaseError } from 'pg';
 import { ZodError } from 'zod';
-import handleClientError from '../../errors/handleClientError';
+import ApiError from '../../errors/ApiError';
+import handlePostgresError from '../../errors/handlePostgresError';
 import handleZodError from '../../errors/handleZodError';
 import { IGenericErrorMessage } from '../../interfaces/error';
+
+
 
 const globalErrorHandler: ErrorRequestHandler = (
   error,
   req: Request,
   res: Response,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
   next: NextFunction
 ) => {
-  console.log({ error });
+  console.log('GlobalErrorHandler ~', error);
+
   let statusCode = 500;
-  let message = 'Something went wrong !';
+  let message = 'Something went wrong!';
   let errorMessages: IGenericErrorMessage[] = [];
 
-  if (error instanceof Prisma.PrismaClientValidationError) {
-    const simplifiedError = handleValidationError(error);
+  if (error instanceof DatabaseError) {
+    const simplifiedError = handlePostgresError(error);
     statusCode = simplifiedError.statusCode;
     message = simplifiedError.message;
     errorMessages = simplifiedError.errorMessages;
@@ -32,31 +31,26 @@ const globalErrorHandler: ErrorRequestHandler = (
     statusCode = simplifiedError.statusCode;
     message = simplifiedError.message;
     errorMessages = simplifiedError.errorMessages;
-  } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    const simplifiedError = handleClientError(error);
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorMessages = simplifiedError.errorMessages;
   } else if (error instanceof ApiError) {
     statusCode = error?.statusCode;
     message = error.message;
     errorMessages = error?.message
       ? [
-          {
-            path: '',
-            message: error?.message,
-          },
-        ]
+        {
+          path: '',
+          message: error?.message,
+        },
+      ]
       : [];
   } else if (error instanceof Error) {
     message = error?.message;
     errorMessages = error?.message
       ? [
-          {
-            path: '',
-            message: error?.message,
-          },
-        ]
+        {
+          path: '',
+          message: error?.message,
+        },
+      ]
       : [];
   }
 
@@ -64,7 +58,7 @@ const globalErrorHandler: ErrorRequestHandler = (
     success: false,
     message,
     errorMessages,
-    stack: error?.stack,
+    stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
   });
 };
 
